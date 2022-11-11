@@ -18,14 +18,19 @@ def pow_to_mul_sep2(expr):
     Convert integer powers to a list of the operators like a**2 => [a,a].
     """
     pows = expr.args 
-    #print(pows)
+    print('pows')
+    print(pows)
     list_terms = []
-    for term in pows:
-      [op, n] = term.as_base_exp()
-      for k in range(n):
-        list_terms.append(op)
+    
+    if len(pows)==0: # there is only a single operator, no product
+      list_terms.append(expr)
+    else:
+        for term in pows:
+          [op, n] = term.as_base_exp()
+          for k in range(n):
+            list_terms.append(op)
 
-    #print(list_terms)
+        #print(list_terms)
     return  list_terms
 
 # Each term in the expanded master equation needs to be cleaned.
@@ -61,9 +66,9 @@ class PhaseSpaceFunction(object):
       # take out all a's
       termConsts = termNoRho
       while termConsts.has(self.a):
-              termConsts = termConsts.subs(self.a,1 ) 
+            termConsts = termConsts.subs(self.a,1 ) 
       while termConsts.has(self.ad):
-              termConsts = termConsts.subs(self.ad,1 ) 
+            termConsts = termConsts.subs(self.ad,1 ) 
       while termConsts.has(self.b):
             termConsts = termConsts.subs(self.b,1 ) 
       while termConsts.has(self.bd):
@@ -72,11 +77,12 @@ class PhaseSpaceFunction(object):
       print('constants in term:')
       display(termConsts)
       clean_term = term.subs(termConsts,1) 
-      #display(cleanTerm)
+      display(clean_term)
       clean_termNoRho =  clean_term.subs(self.rho,1 )
       ordered_operators = pow_to_mul_sep2(clean_termNoRho)
-      #print('test')
-      #print(ordered_operators)
+      print('test')
+      display(clean_termNoRho)
+      print(ordered_operators)
       # if rho is the first entry of this clean term, the operators must be on the RHS
       #print(cleanTerm.args)
       if clean_term.args[0]==self.rho:
@@ -131,7 +137,7 @@ class PhaseSpaceFunction(object):
               else:
                  print('error')
       
-              display(field_eqn)
+              # display(field_eqn)
           # Operators appear on RIGHT SIDE of rho
           if termtype=='RHS':
             print('RHS term, order operators applied:')
@@ -148,7 +154,7 @@ class PhaseSpaceFunction(object):
                 
               else:
                 'error'
-              display(field_eqn)
+              # display(field_eqn)
 
           field_eqn = termConsts*field_eqn
 
