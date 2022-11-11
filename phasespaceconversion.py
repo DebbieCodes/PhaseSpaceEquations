@@ -33,6 +33,30 @@ def pow_to_mul_sep2(expr):
         #print(list_terms)
     return  list_terms
 
+def getPosRho(clean_term,rho):
+    counter=0
+    items= clean_term.args
+    n_items = len(items)
+    print(items)
+    for k in range(n_items):
+        item = items[k]
+        if item==rho:
+           break    # break here
+        else:
+            [op, n] = item.as_base_exp()
+            counter = counter+n
+            print(counter)
+
+    print('rho occurs on position  {}'.format(counter))
+    return counter
+
+def labelOperators(ordered_operators, pos_rho):
+    n_operators = len(ordered_operators)
+    operator_labels = ['RHS']*n_operators
+    operator_labels[:pos_rho]=['LHS']*pos_rho
+    return operator_labels
+
+
 # Each term in the expanded master equation needs to be cleaned.
 
 
@@ -77,27 +101,38 @@ class PhaseSpaceFunction(object):
       #print('constants in term:')
       #display(termConsts)
       clean_term = term.subs(termConsts,1) 
-      #display(clean_term)
+      display(clean_term)
       clean_termNoRho =  clean_term.subs(self.rho,1 )
+      display(clean_termNoRho)
       ordered_operators = pow_to_mul_sep2(clean_termNoRho)
+      n_operators = len(ordered_operators)
       #print('test')
       #display(clean_termNoRho)
       #print(ordered_operators)
       # if rho is the first entry of this clean term, the operators must be on the RHS
       #print(cleanTerm.args)
+      operator_labels =[] # label each individual operator in the list as RHS or LHS of Rho
+      
       if clean_term.args[0]==self.rho:
-        termtype = 'RHS'      
+        # label all operators as RHS
+        termtype = 'RHS'   
+        operator_labels = ['RHS']*n_operators
       elif clean_term.args[-1]==self.rho:
         termtype = 'LHS'
-      else:
-        'unable to determine term type'
-      return termtype, ordered_operators, termConsts
+        operator_labels = ['LHS']*n_operators
+      else: # rho in the middle:
+        termtype = 'MID'
+        pos_rho=getPosRho(clean_term,self.rho)
+        operator_labels=labelOperators(ordered_operators, pos_rho)
+
+        print('unable to determine term type')
+      return termtype, ordered_operators,operator_labels, termConsts
     
     def getFPfromME(self):
       # get number of terms in the Master equation
       ME_termlist = self.ME.args
       n_terms = len(ME_termlist)
-      #display(ME_termlist)
+      display(ME_termlist)
       field_terms = []
       
       if self.field_type=='W':
@@ -115,45 +150,43 @@ class PhaseSpaceFunction(object):
           field_eqn = self.field # dummy 1st 
           term = ME_termlist[j] # select jth term from ME
           display(term)
-          termtype, list_operators, termConsts = self.cleanTerm(term) # get operator list from term
-
+          termtype, list_operators,operator_labels, termConsts = self.cleanTerm(term) # get operator list from term
+          n_operators = len(list_operators)
           
           # Operators appear on LEFT SIDE of rho
           if termtype=='LHS':
             # must now run to list in reverse order!
-            list_operators_rev = list(reversed(list_operators))
+            list_operators= list(reversed(list_operators))
             print('LHS term, order operators applied:')
-            print(list_operators_rev)
-                
-            for op in list_operators_rev:
-              if op==self.a:
-                field_eqn = self.alpha*field_eqn  - Rational(s-1, 2)*diff(field_eqn, self.alphas)
-              elif op==self.ad:
-                field_eqn = self.alphas*field_eqn - Rational(s+1, 2)*diff(field_eqn, self.alpha)
-              elif op==self.b:
-                field_eqn = self.beta*field_eqn  - Rational(s-1, 2)*diff(field_eqn, self.betas)
-              elif op==self.bd:
-                field_eqn = self.betas*field_eqn - Rational(s+1, 2)*diff(field_eqn, self.beta) 
-              else:
-                 print('error')
-      
-              # display(field_eqn)
-          # Operators appear on RIGHT SIDE of rho
-          if termtype=='RHS':
+          elif termtype=='RHS':
             print('RHS term, order operators applied:')
-            print(list_operators)
-            for op in list_operators:
-              if op==self.a:
+          print(list_operators)    
+
+          for k in range(n_operators):
+              op = list_operators[k]
+              op_label = operator_labels[k]
+
+              if op==self.a and op_label=='LHS':
+                field_eqn = self.alpha*field_eqn  - Rational(s-1, 2)*diff(field_eqn, self.alphas)
+              elif op==self.ad and  op_label=='LHS':
+                field_eqn = self.alphas*field_eqn - Rational(s+1, 2)*diff(field_eqn, self.alpha)
+              elif op==self.b and  op_label=='LHS':
+                field_eqn = self.beta*field_eqn  - Rational(s-1, 2)*diff(field_eqn, self.betas)
+              elif op==self.bd and  op_label=='LHS':
+                field_eqn = self.betas*field_eqn - Rational(s+1, 2)*diff(field_eqn, self.beta) 
+     
+              # RHS TERMS
+              elif op==self.a and  op_label=='RHS':
                 field_eqn = self.alpha*field_eqn  - Rational(s+1, 2)*diff(field_eqn, self.alphas)
-              elif op==self.ad:
+              elif op==self.ad and  op_label=='RHS':
                 field_eqn = self.alphas*field_eqn - Rational(s-1, 2)*diff(field_eqn, self.alpha)
-              elif op==self.b:
+              elif op==self.b and  op_label=='RHS':
                   field_eqn = self.beta*field_eqn  - Rational(s+1, 2)*diff(field_eqn, self.betas)
-              elif op==self.bd:
+              elif op==self.bd and  op_label=='RHS':
                   field_eqn = self.betas*field_eqn - Rational(s-1, 2)*diff(field_eqn, self.beta)
                 
               else:
-                'error'
+                print('error')
               # display(field_eqn)
 
           field_eqn = termConsts*field_eqn
