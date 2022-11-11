@@ -18,8 +18,8 @@ def pow_to_mul_sep2(expr):
     Convert integer powers to a list of the operators like a**2 => [a,a].
     """
     pows = expr.args 
-    print('pows')
-    print(pows)
+    #print('pows')
+    #print(pows)
     list_terms = []
     
     if len(pows)==0: # there is only a single operator, no product
@@ -74,15 +74,15 @@ class PhaseSpaceFunction(object):
       while termConsts.has(self.bd):
             termConsts = termConsts.subs(self.bd,1 ) 
 
-      print('constants in term:')
-      display(termConsts)
+      #print('constants in term:')
+      #display(termConsts)
       clean_term = term.subs(termConsts,1) 
-      display(clean_term)
+      #display(clean_term)
       clean_termNoRho =  clean_term.subs(self.rho,1 )
       ordered_operators = pow_to_mul_sep2(clean_termNoRho)
-      print('test')
-      display(clean_termNoRho)
-      print(ordered_operators)
+      #print('test')
+      #display(clean_termNoRho)
+      #print(ordered_operators)
       # if rho is the first entry of this clean term, the operators must be on the RHS
       #print(cleanTerm.args)
       if clean_term.args[0]==self.rho:
@@ -146,11 +146,11 @@ class PhaseSpaceFunction(object):
               if op==self.a:
                 field_eqn = self.alpha*field_eqn  - Rational(s+1, 2)*diff(field_eqn, self.alphas)
               elif op==self.ad:
-                field_eqn = self.alphas*field_eqn + Rational(s-1, 2)*diff(field_eqn, self.alpha)
+                field_eqn = self.alphas*field_eqn - Rational(s-1, 2)*diff(field_eqn, self.alpha)
               elif op==self.b:
                   field_eqn = self.beta*field_eqn  - Rational(s+1, 2)*diff(field_eqn, self.betas)
               elif op==self.bd:
-                  field_eqn = self.betas*field_eqn + Rational(s-1, 2)*diff(field_eqn, self.beta)
+                  field_eqn = self.betas*field_eqn - Rational(s-1, 2)*diff(field_eqn, self.beta)
                 
               else:
                 'error'
