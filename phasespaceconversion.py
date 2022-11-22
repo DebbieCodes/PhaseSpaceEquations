@@ -61,9 +61,9 @@ def labelOperators(ordered_operators, pos_rho):
 
 
 class PhaseSpaceFunction(object):
-    def __init__(self, mastereq,field_type='W'):
+    def __init__(self, mastereq,field_type='W',showDetails=False):
         self.ME = mastereq
-
+        self.showDetails = showDetails
 
         #this is kind of lame that we need to redfine the symbols here if there are multiple
         self.rho = Symbol(r'\rho', commutative=False)
@@ -101,9 +101,12 @@ class PhaseSpaceFunction(object):
       #print('constants in term:')
       #display(termConsts)
       clean_term = term.subs(termConsts,1) 
-      display(clean_term)
+
       clean_termNoRho =  clean_term.subs(self.rho,1 )
-      display(clean_termNoRho)
+        
+      if self.showDetails: 
+          display(clean_term)
+          display(clean_termNoRho)
       ordered_operators = pow_to_mul_sep2(clean_termNoRho)
       n_operators = len(ordered_operators)
       #print('test')
@@ -146,7 +149,8 @@ class PhaseSpaceFunction(object):
         print(self.field_type)
         
       for j in range (n_terms): # loop over terms in ME
-          print( "Term {} :".format(j)) 
+        
+
           field_eqn = self.field # dummy 1st 
           term = ME_termlist[j] # select jth term from ME
           display(term)
@@ -157,10 +161,12 @@ class PhaseSpaceFunction(object):
           if termtype=='LHS':
             # must now run to list in reverse order!
             list_operators= list(reversed(list_operators))
-            print('LHS term, order operators applied:')
+            printop = 'LHS term, order operators applied:'
           elif termtype=='RHS':
-            print('RHS term, order operators applied:')
-          print(list_operators)    
+            printop = 'RHS term, order operators applied:'
+            
+        
+
 
           for k in range(n_operators):
               op = list_operators[k]
@@ -192,7 +198,12 @@ class PhaseSpaceFunction(object):
           field_eqn = termConsts*field_eqn
 
           field_terms.append(field_eqn)
-          display(field_eqn)
+            
+          if self.showDetails: 
+              print( "Term {} :".format(j)) 
+              print(printop)
+              print(list_operators)  
+              display(field_eqn)
 
       field_eqn_final = np.sum(field_terms)
       field_eqn_final=simplify(field_eqn_final) 
